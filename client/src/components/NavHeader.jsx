@@ -2,8 +2,16 @@ import { useEffect, useState } from 'react';
 import { Button, Container, Navbar, Nav } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import { LogoutButton } from './AuthComponents';
+import { useNavigate } from 'react-router-dom';
 
 function NavHeader(props) {
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    props.handleLogout();
+    navigate('/');
+  }
     return(
     <Navbar bg='success' data-bs-theme='dark'>
       <Container fluid>
@@ -12,14 +20,15 @@ function NavHeader(props) {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
-            <Nav.Link as={Link} to="/game">Play</Nav.Link>
+            {props.loggedIn && <Nav.Link as={Link} to="/game">Play</Nav.Link>}
+            <Nav.Link as={Link} to="/game/demo">Demo</Nav.Link>
             {props.loggedIn && <Nav.Link as={Link} to="/history">History</Nav.Link>}
           </Nav>
           <div className="d-flex align-items-center">
             {props.loggedIn ? (
               <div className="d-flex align-items-center">
-                <span className="text-dark me-2">Ciao, {props.user.name}!</span>
-                <LogoutButton logout={props.handleLogout} />
+                <span className="text-light me-2">Ciao, {props.user.username}!</span>
+                <LogoutButton logout={handleLogout} />
               </div>
             ) : (
               <Link to='/login' className='btn btn-outline-light'>Login</Link>

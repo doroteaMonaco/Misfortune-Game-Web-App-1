@@ -25,9 +25,21 @@ import { Game, GameCard } from './models.mjs';
 
 const app = express();
 const port = 3001;
+const SERVER_URL = `http://localhost:${port}`;
+
+// Helper function to create full image URL
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  return `${SERVER_URL}${imagePath}`;
+};
 
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Serve static files (images) from public directory
+app.use('/public', express.static('public'));
+// Serve images directly from /images path
+app.use('/images', express.static('public/images'));
 
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -48,11 +60,17 @@ passport.use(new LocalStrategy(async function verify(username, password, cb) {
 
 // Serialize viene usato per salvare l'utente nella sessione
 passport.serializeUser(function (user, cb) {
-  cb(null, user);
+  // Store only safe user data in session - NEVER passwords or hashes
+  const safeUser = {
+    id: user.id,
+    username: user.username
+  };
+  cb(null, safeUser);
 });
 
 // Deserialize viene usato per recuperare l'utente dalla sessione
 passport.deserializeUser(function (user, cb) {
+  // User is already safe from serialization
   return cb(null, user);
 });
 
@@ -78,13 +96,23 @@ app.use(passport.authenticate('session'));
 
 // LOGIN
 app.post('/api/sessions', passport.authenticate('local'), function(req, res) {
-  return res.status(201).json(req.user);
+  // Return only safe user data without password/salt
+  const safeUser = {
+    id: req.user.id,
+    username: req.user.username
+  };
+  return res.status(201).json(safeUser);
 });
 
 // Prende la sessione corrente
 app.get('/api/sessions/current', (req, res) => {
   if (req.isAuthenticated()) {
-    res.json(req.user);
+    // Return only safe user data without password/salt
+    const safeUser = {
+      id: req.user.id,
+      username: req.user.username
+    };
+    res.json(safeUser);
   } else {
     res.status(401).json({ error: 'Not authenticated' });
   }
@@ -103,7 +131,12 @@ app.delete('/api/sessions/current', (req, res) => {
 app.get('/api/games/demo', async (req, res) => {
   try {
     const initialCards = await getRandomCards(3);
-    res.json(initialCards);
+    // Include full image URLs for initial cards
+    const cardsWithFullUrls = initialCards.map(card => ({
+      ...card,
+      image: getFullImageUrl(card.image)
+    }));
+    res.json(cardsWithFullUrls);
   } catch (error) {
     res.status(500).json({ error: 'Unable to get initial cards' });
   }
@@ -118,13 +151,13 @@ app.get('/api/games/demo/round', async (req, res) => {
     
     const roundCard = await getRandomCard(excludeIds);
     if (roundCard.error) {
-      return res.status(500).json({ error: 'Unable to get round card' });
+      return res.status(404).json({ error: 'No more cards available', message: 'All available cards have been used' });
     }
 
     const {id, name, image} = roundCard;
-    res.json({id, name, image});
+    res.json({id, name, image: getFullImageUrl(image)});
   } catch (error) {
-    console.error('Error starting demo game:', error);
+    console.error('Error getting demo round card:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -147,23 +180,23 @@ app.post('/api/game/demo/guess', [
       req.body.playerCardIds,
       req.body.insertPosition
     );
-    
-    if (result.error) {
+      if (result.error) {
       return res.status(404).json(result);
     }
     if (result.correct === false) {
-      
-      return res.json(result.correct);
+      return res.json({ 
+        correct: false, 
+        correctPosition: result.correctPosition
+      });
     }
     else {
       const card = await getCardById(req.body.cardId);
       if (card.error) {
         return res.status(404).json(card);
-      }
-      result.card = {
+      }      result.card = {
         name: card.name,
-        image: card.image,
-        misfortune: card.misfortune,
+        image: getFullImageUrl(card.image),
+        misfortune: card.misfortune  // Include index when card is won to allow proper insertion
       };
     }
     
@@ -181,7 +214,12 @@ app.post('/api/game/demo/guess', [
 app.post('/api/games/new', isLoggedIn, async (req, res) => {
   try {
     const initialCards = await getRandomCards(3);
-    res.json(initialCards);
+    // Include full image URLs for initial cards
+    const cardsWithFullUrls = initialCards.map(card => ({
+      ...card,
+      image: getFullImageUrl(card.image)
+    }));
+    res.json(cardsWithFullUrls);
   }
   catch (error) {
     console.error('Error starting game:', error);
@@ -189,7 +227,7 @@ app.post('/api/games/new', isLoggedIn, async (req, res) => {
   }
 });
 
-app.get('/api/games/:gameId/round', async (req, res) => {
+app.get('/api/games/:gameId/round', isLoggedIn, async (req, res) => {
   try {
     // Se initialCards è passato come stringa separata da virgole: "1,2,3"
     const excludeIds = req.query.initialCards 
@@ -198,11 +236,12 @@ app.get('/api/games/:gameId/round', async (req, res) => {
     
     const roundCard = await getRandomCard(excludeIds);
     if (roundCard.error) {
-      return res.status(500).json({ error: 'Unable to get round card' });
-    }    const {id, name, image} = roundCard;
-    res.json({id, name, image});
+      return res.status(404).json({ error: 'No more cards available', message: 'All available cards have been used' });
+    }
+    const {id, name, image} = roundCard;
+    res.json({id, name, image: getFullImageUrl(image)});
   } catch (error) {
-    console.error('Error starting demo game:', error);
+    console.error('Error getting round card:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -210,8 +249,8 @@ app.get('/api/games/:gameId/round', async (req, res) => {
 // L'utente fa una guess in una partita
 app.post('/api/games/:gameId/guess', isLoggedIn, [
   check('cardId').isInt({ min: 1 }),
-  check('position').isInt({ min: 0 }),
-  check('round').isInt({ min: 1 })
+  check('playerCardIds').isArray(),
+  check('insertPosition').isInt({ min: 0 })
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -227,20 +266,21 @@ app.post('/api/games/:gameId/guess', isLoggedIn, [
     
     if (result.error) {
       return res.status(404).json(result);
-    }
-    if (result.correct === false) {
-      return res.json(result.correct);
+    }    if (result.correct === false) {
+      return res.json({ 
+        correct: false, 
+        correctPosition: result.correctPosition
+      });
     }
     else {
       const card = await getCardById(req.body.cardId);
       if (card.error) {
         return res.status(404).json(card);
-      }
-      result.card = {
+      }        result.card = {
         id: card.id,
         name: card.name,
-        image: card.image,
-        misfortune: card.misfortune,
+        image: getFullImageUrl(card.image),
+        misfortune: card.misfortune  // Include index when card is won to allow proper insertion
       };
     }
     
@@ -296,7 +336,15 @@ app.get('/api/games', isLoggedIn, async (req, res) => {
 app.get('/api/games/:gameId/cards', isLoggedIn, async (req, res) => {
   try {
     const gameCards = await getCardsOfGame(req.params.gameId);
-    res.json(gameCards);
+    // Add full image URLs to cards
+    const cardsWithFullUrls = gameCards.map(item => ({
+      ...item,
+      card: {
+        ...item.card,
+        image: getFullImageUrl(item.card.image)
+      }
+    }));
+    res.json(cardsWithFullUrls);
   } catch (error) {
     console.error('Error fetching game cards:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -305,24 +353,20 @@ app.get('/api/games/:gameId/cards', isLoggedIn, async (req, res) => {
 
 // Inseriamo una carta in una partita
 app.post('/api/games/:gameId/cards', isLoggedIn, [
-  check('cardId').isInt({ min: 1 }),
-  check('round').isInt({ min: 1 }),
-  check('initial').isBoolean(),
-  check('won').optional().isBoolean()
+  check('cardId').isInt({ min: 1 })
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });
   }
-
   try {
     const gameCard = new GameCard(
       null,
       req.params.gameId,
       req.body.cardId,
-      req.body.round,
+      req.body.round !== undefined ? req.body.round : null, // Explicitly convert undefined to null
       req.body.initial ? 1 : 0,
-      req.body.won ? 1 : null
+      req.body.won !== undefined ? (req.body.won ? 1 : 0) : null
     );
 
     const gameCardId = await addGameCard(gameCard);

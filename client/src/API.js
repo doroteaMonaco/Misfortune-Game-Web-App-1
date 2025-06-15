@@ -119,15 +119,15 @@ const getRoundCard = async (gameId, excludeIds) => {
 };
 
 // Authenticated game - make guess
-const makeGuess = async (gameId, cardId, position, round) => {
+const makeGuess = async (gameId, cardId, playerCardIds, insertPosition) => {
   const response = await fetch(SERVER_URL + `/api/games/${gameId}/guess`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     credentials: 'include',
     body: JSON.stringify({
       cardId: cardId,
-      position: position,
-      round: round
+      playerCardIds: playerCardIds,
+      insertPosition: insertPosition
     })
   });
   
@@ -194,16 +194,26 @@ const getGameCards = async (gameId) => {
 
 // Add game card
 const addGameCard = async (gameId, cardId, round, initial, won) => {
+  const body = {
+    cardId: cardId,
+    initial: initial
+  };
+  
+  // Only include 'round' if it's not null (for non-initial cards)
+  if (round !== null && round !== undefined) {
+    body.round = round;
+  }
+  
+  // Only include 'won' if it's defined
+  if (won !== undefined) {
+    body.won = won;
+  }
+  
   const response = await fetch(SERVER_URL + `/api/games/${gameId}/cards`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     credentials: 'include',
-    body: JSON.stringify({
-      cardId: cardId,
-      round: round,
-      initial: initial,
-      won: won
-    })
+    body: JSON.stringify(body)
   });
   
   if(response.ok) {

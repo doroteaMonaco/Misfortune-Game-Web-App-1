@@ -5,6 +5,7 @@ import API from "./API";
 import DefaultLayout from "./components/DefaultLayout";
 import HomePage from "./components/HomePage";
 import GamePage from "./components/GamePage";
+import GameDemo from "./components/GameDemo";
 import HistoryPage from "./components/HistoryPage";
 import { Routes, Route, Navigate } from "react-router";
 import { LoginForm } from "./components/AuthComponents";
@@ -28,15 +29,15 @@ function App() {
     };
     checkAuth();
   }, []);
-
   const handleLogin = async (credentials) => {
     try {
       const user = await API.logIn(credentials);
       setLoggedIn(true);
-      setMessage({msg: `Benvenuto, ${user.name}!`, type: 'success'});
+      setMessage({msg: `Benvenuto, ${user.username}!`, type: 'success'});
       setUser(user);
     } catch(err) {
       setMessage({msg: err, type: 'danger'});
+      throw err; // Re-throw so AuthComponents can handle it
     }
   };
 
@@ -46,12 +47,12 @@ function App() {
     setMessage('');
     setUser('');
   };
-
   return (
-    <Routes>
-      <Route element={ <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} user={user}/> } >
-        <Route path="/" element={ <HomePage /> } />
+    <Routes>     
+       <Route element={ <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} user={user}/> } >
+        <Route path="/" element={ <HomePage loggedIn={loggedIn} /> } />
         <Route path="/game" element={ <GamePage loggedIn={loggedIn} user={user} /> } />
+        <Route path="/game/demo" element={ <GameDemo /> } />
         <Route path="/history" element={ loggedIn ? <HistoryPage user={user} /> : <Navigate replace to='/' />} />
         <Route path="/login" element={ loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
         <Route path="*" element={ <NotFound /> } />

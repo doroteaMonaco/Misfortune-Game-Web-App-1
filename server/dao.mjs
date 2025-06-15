@@ -16,11 +16,11 @@ export const getUser = (username, password) => {
       else if (row == undefined) resolve(false);
       else {
         crypto.scrypt(password, row.salt, 32, (err, hashedPwd) => {
-          if (err) reject(err);
-          else if (!crypto.timingSafeEqual(Buffer.from(row.password_hash, 'hex'), hashedPwd))
+          if (err) reject(err);          else if (!crypto.timingSafeEqual(Buffer.from(row.password_hash, 'hex'), hashedPwd))
             resolve(false);
           else
-            resolve(new User(row.id, row.username, row.password_hash, row.salt));
+            // Return only safe user data - NEVER include password_hash or salt
+            resolve(new User(row.id, row.username));
         });
       }
     });
@@ -184,24 +184,27 @@ export const checkIndex = (cardId, playerCardIds, insertPosition) => {
       
       db.all(getPlayerCardsSql, playerCardIds, (err, playerCards) => {
         if (err) return reject(err);
-        
-        // Check if the placement is correct
+          // Check if the placement is correct
         let correct = false;
+        let correctPosition = 0;
         
-        if (insertPosition === 0) {
-          // Inserting at the beginning
-          correct = cardIndex < playerCards[0].misfortune_index;
-        } else if (insertPosition >= playerCards.length) {
-          // Inserting at the end
-          correct = cardIndex > playerCards[playerCards.length - 1].misfortune_index;
-        } else {
-          // Inserting in the middle
-          const prevCard = playerCards[insertPosition - 1];
-          const nextCard = playerCards[insertPosition];
-          correct = cardIndex > prevCard.misfortune_index && cardIndex < nextCard.misfortune_index;
+        // Find the correct position for this card
+        for (let i = 0; i < playerCards.length; i++) {
+          if (cardIndex < playerCards[i].misfortune_index) {
+            correctPosition = i;
+            break;
+          }
+          correctPosition = i + 1;
         }
+          // Check if the provided position matches the correct position
+        correct = (insertPosition === correctPosition);
         
-        resolve({ correct, cardIndex });
+        // SECURITY: Only return if correct, don't expose internal indexes
+        if (correct) {
+          resolve({ correct: true });
+        } else {
+          resolve({ correct: false, correctPosition });
+        }
       });
     });
   });
