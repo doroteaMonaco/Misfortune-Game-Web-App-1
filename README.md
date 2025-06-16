@@ -11,10 +11,25 @@
 
 ### **Protected Routes** (require authentication)
 - **`/game`** - **Authenticated Game**: Full game experience with multiple rounds, score tracking, game history saving, and 30-second timer per round
-- **`/history`** - **Game History**: Chronological view of user's completed games with expandable details showing cards won/lost, round information, and game statistics
+- **`/profile`** - **User Profile**: Personal profile page displaying user information and providing access to game history. This is the main hub for authenticated users
+- **`/history`** - **Game History**: Chronological view of user's completed games with expandable details showing cards won/lost, round information, and game statistics. Accessible only through the user profile page
 
 ### **Utility Routes**
 - **`/*`** - **404 Not Found**: Catch-all route for invalid URLs displaying a not found page
+
+## Navigation Structure
+
+The application implements a user-centric navigation approach:
+
+### **For Anonymous Users:**
+- Access to Home page with game introduction and rules
+- Access to Demo game for trying the mechanics
+- Login option to access full features
+
+### **For Authenticated Users:**
+- **Profile-Centered Access**: Game history is accessible only through the user profile page, creating a more personalized experience
+- **Streamlined Navigation**: The main navigation bar includes Home, Play, Demo, and Profile links
+- **Centralized User Hub**: The profile page serves as the main hub for user-specific actions and information
 
 ## API Server
 
@@ -380,12 +395,13 @@ Response body:
 ## Main React Components
 
 - `DefaultLayout` (in `DefaultLayout.jsx`): Main application wrapper that provides consistent layout structure with navigation bar, message handling, and content area for all pages
-- `HomePage` (in `HomePage.jsx`): Landing page component that displays welcome message, game rules, and navigation buttons to different game modes based on authentication status
+- `HomePage` (in `HomePage.jsx`): Landing page component that displays welcome message, game rules, and navigation buttons. For authenticated users, provides access to game and user profile instead of direct history access
 - `GameDemo` (in `GameDemo.jsx`): Demo game implementation with single-round gameplay, 30-second timer, card placement logic, and tutorial-style experience for non-authenticated users
 - `GamePage` (in `GamePage.jsx`): Full authenticated game component with multiple rounds, comprehensive timer management, score tracking, game result saving, and round-by-round progression
-- `HistoryPage` (in `HistoryPage.jsx`): Game history viewer with expandable accordion interface showing completed games, detailed statistics, and individual card information with round numbers
+- `ProfilePage` (in `ProfilePage.jsx`): User profile page that displays account information and serves as the gateway to game history. This centralizes user-specific features and provides better navigation structure
+- `HistoryPage` (in `HistoryPage.jsx`): Game history viewer with expandable accordion interface showing completed games, detailed statistics, and individual card information with round numbers. Now accessible only through the user profile
 - `AuthComponents` (in `AuthComponents.jsx`): Contains LoginForm component for user authentication with form validation, error handling, and credential submission
-- `NavHeader` (in `NavHeader.jsx`): Navigation bar component that displays authentication status, user information, and provides navigation links to different application sections
+- `NavHeader` (in `NavHeader.jsx`): Navigation bar component that displays authentication status, user information, and provides navigation links. Updated to include profile link instead of direct history access for better user experience
 
 (only _main_ components, minor ones may be skipped)
 

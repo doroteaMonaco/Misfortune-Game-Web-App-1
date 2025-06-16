@@ -7,6 +7,7 @@ import HomePage from "./components/HomePage";
 import GamePage from "./components/GamePage";
 import GameDemo from "./components/GameDemo";
 import HistoryPage from "./components/HistoryPage";
+import ProfilePage from "./components/ProfilePage";
 import { Routes, Route, Navigate } from "react-router";
 import { LoginForm } from "./components/AuthComponents";
 import NotFound from "./components/NotFound";
@@ -47,12 +48,12 @@ function App() {
     setMessage('');
     setUser('');
   };
-  return (
-    <Routes>     
+  return (    <Routes>     
        <Route element={ <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} user={user}/> } >
-        <Route path="/" element={ <HomePage loggedIn={loggedIn} /> } />
+        <Route path="/" element={ <HomePage loggedIn={loggedIn} user={user} /> } />
         <Route path="/game" element={ <GamePage loggedIn={loggedIn} user={user} /> } />
         <Route path="/game/demo" element={ <GameDemo /> } />
+        <Route path="/profile" element={ loggedIn ? <ProfilePage user={user} /> : <Navigate replace to='/' />} />
         <Route path="/history" element={ loggedIn ? <HistoryPage user={user} /> : <Navigate replace to='/' />} />
         <Route path="/login" element={ loggedIn ? <Navigate replace to='/' /> : <LoginForm handleLogin={handleLogin} />} />
         <Route path="*" element={ <NotFound /> } />

@@ -17,12 +17,11 @@ function NavHeader(props) {
       <Container fluid>
       <Link to="/" className="navbar-brand">Stuff Happens</Link>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
+        <Navbar.Collapse id="basic-navbar-nav">          <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
             {props.loggedIn && <Nav.Link as={Link} to="/game">Play</Nav.Link>}
             <Nav.Link as={Link} to="/game/demo">Demo</Nav.Link>
-            {props.loggedIn && <Nav.Link as={Link} to="/history">History</Nav.Link>}
+            {props.loggedIn && <Nav.Link as={Link} to="/profile">Profile</Nav.Link>}
           </Nav>
           <div className="d-flex align-items-center">
             {props.loggedIn ? (

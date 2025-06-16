@@ -29,8 +29,7 @@ function HomePage(props) {
       {props.loggedIn && (
         <Row className="text-center mb-5">
           <Col>
-            <Card className="border-success">
-              <Card.Header className="bg-success text-white">
+            <Card className="border-success">              <Card.Header className="bg-success text-white">
                 <h4 className="mb-0">
                   <i className="bi bi-person-check me-2"></i>
                   Welcome back, {props.user?.username || 'Player'}!
@@ -42,9 +41,9 @@ function HomePage(props) {
                     <i className="bi bi-controller me-2"></i>
                     Play Full Game
                   </Button>
-                  <Button as={Link} to="/history" variant="outline-success" size="lg">
-                    <i className="bi bi-clock-history me-2"></i>
-                    View History
+                  <Button as={Link} to="/profile" variant="success" size="lg">
+                    <i className="bi bi-person-circle me-2"></i>
+                    View Profile
                   </Button>
                 </div>
               </Card.Body>

@@ -360,12 +360,6 @@ function HistoryPage({ user }) {
           ))}
         </Col>
       </Row>
-      
-      <Row className="mt-4 mb-5">
-        <Col className="text-center">
-          <Button variant="success" onClick={() => navigate('/game')}>Play New Game</Button>
-        </Col>
-      </Row>
     </Container>
   );
 }
