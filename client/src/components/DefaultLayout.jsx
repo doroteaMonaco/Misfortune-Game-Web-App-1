@@ -1,6 +1,7 @@
 import { Alert, Container, Row } from "react-bootstrap";
 import { Outlet } from "react-router";
 import NavHeader from "./NavHeader";
+import Footer from "./Footer";
 
 function DefaultLayout(props) {
     return (
@@ -16,6 +17,7 @@ function DefaultLayout(props) {
                 )}
                 <Outlet />
             </Container>
+            <Footer />
         </>
     )
 }
