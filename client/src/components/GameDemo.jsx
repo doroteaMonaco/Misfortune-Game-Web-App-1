@@ -25,14 +25,13 @@ function GameDemo() {
       setTimerId(timer);
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && gameState === 'playing') {
-      // Time's up!
       handleTimeUp();
     }
-  }, [timeLeft, gameState, currentCard]);
+  }, [timeLeft, gameState, currentCard]); //uguale al timer del gioco autenticato
 
   const handleTimeUp = () => {
     setMessage("Time's up! You didn't choose in time. Game Over!");
-    setGameState('lost');
+    setGameState('lost'); //se scade il tempo prima di fare una mossa, il gioco finisce ed è perso
     setGameResult({
       type: 'lose',
       rounds: round,
@@ -50,7 +49,9 @@ function GameDemo() {
       clearTimeout(timerId);
       setTimerId(null);
     }
-  };const startDemo = async () => {
+  };
+
+  const startDemo = async () => {
     try {
       setGameState('loading');
       const cards = await API.startDemoGame();
@@ -73,7 +74,9 @@ function GameDemo() {
     } catch (error) {
       setMessage('Error getting next card: ' + error);
     }
-  };  const makeGuess = async (position) => {
+  };  
+  
+  const makeGuess = async (position) => {
     try {
       stopTimer(); 
       
@@ -100,7 +103,6 @@ function GameDemo() {
         });
         setShowResult(true);
       } else {
-        // Wrong guess
         setMessage(`Wrong! The card "${currentCard.name}" doesn't go there. Game Over!`);
         setGameState('lost');
         setGameResult({

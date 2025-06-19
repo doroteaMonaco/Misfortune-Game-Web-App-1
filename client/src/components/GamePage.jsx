@@ -37,18 +37,18 @@ function GamePage({ user }) {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (gameState === 'playing' && currentCard && timeLeft > 0) {
+    if (gameState === 'playing' && currentCard && timeLeft > 0) { //il timer parte solo se il gioco è in corso e c'è una carta corrente
       const timer = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
+        setTimeLeft(timeLeft - 1); //dopo 1 secondo diminuisco il tempo rimanente
       }, 1000);
       setTimerId(timer);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer); //alla fine dell'effetto pulisco il timer
     } else if (timeLeft === 0 && gameState === 'playing') {
-      handleTimeUp();
+      handleTimeUp(); //appena scade il timer, chiamo la funzione 
     }  }, [timeLeft, gameState, currentCard]);
 
   const handleTimeUp = () => {
-    if (!currentCard) {
+    if (!currentCard) { //scade il timer ma non c'è una carta corrente
       console.error('handleTimeUp called but currentCard is null');
       return;
     }
@@ -69,6 +69,7 @@ function GamePage({ user }) {
     setCardsLost(newCardsLost);
     setLastRoundResult(newResult);
     
+    //se il giocatore ha perso 3 carte, termina il gioco 
     if (newCardsLost >= 3) {
       endGame('lose', newGameResults);
     } else {
@@ -76,10 +77,12 @@ function GamePage({ user }) {
     }
   };
 
+  //setta il timer a 30 secondi all'inizio del gioco
   const startTimer = () => {
     setTimeLeft(30);
   };
 
+  //ferma il timer se è in esecuzione
   const stopTimer = () => {
     if (timerId) {
       clearTimeout(timerId);
@@ -89,9 +92,10 @@ function GamePage({ user }) {
 
   const startGame = async () => {
     try {
-      setGameState('loading');
-      setGameStartTime(dayjs());      const cards = await API.startNewGame();
-      const sortedCards = cards.sort((a, b) => a.misfortune - b.misfortune);
+      setGameState('loading'); //inizio il gioco in stato di caricamento
+      setGameStartTime(dayjs());      
+      const cards = await API.startNewGame();
+      const sortedCards = cards.sort((a, b) => a.misfortune - b.misfortune); //ordino le carte iniziali
       setInitialCards(sortedCards);
       setPlayerCards([...sortedCards]);
       setGameState('playing');
@@ -108,16 +112,16 @@ function GamePage({ user }) {
       const usedCardIds = [
         ...initialCards.map(c => c.id),
         ...gameResults.filter(r => r.won).map(r => r.cardId)
-      ];
+      ]; //filtro le carte iniziali e quelle vinte nei round precedenti
       
-      const card = await API.getRoundCard(usedCardIds);
+      const card = await API.getRoundCard(usedCardIds); //ottengo una carta per il round corrente
       setCurrentCard(card);
-      startTimer();
+      startTimer(); //inizio il timer per il round corrente
     } catch (error) {
       setMessage('Error getting next card: ' + error);
-      console.error('Error in nextRound:', error);
     }
-  };  const makeGuess = async (position) => {
+  };  
+  const makeGuess = async (position) => {
     try {
       stopTimer();
       
@@ -133,7 +137,7 @@ function GamePage({ user }) {
           name: result.card.name,
           image: result.card.image,
           misfortune: result.card.misfortune  
-        };
+        }; //se la risposta è corretta, creo un nuovo oggetto carta e lo aggiungo alle carte del giocatore
         
         const newPlayerCards = [...playerCards];
         newPlayerCards.splice(position, 0, newCard);
@@ -147,23 +151,24 @@ function GamePage({ user }) {
           cardName: result.card.name,
           won: true,
           position: position,          
-          cardDetails: newCard
+          cardDetails: newCard //aggiungo i dettagli della carta vinta
         };
         
         const newGameResults = [...gameResults, newResult];
         setGameResults(newGameResults);
         const newCardsWon = cardsWon + 1;
-        setCardsWon(newCardsWon);
-        setLastRoundResult(newResult);
+        setCardsWon(newCardsWon); //incremento il conteggio delle carte vinte
+        setLastRoundResult(newResult); //mostro i risultati dell'ultimo round
         
         if (newCardsWon >= 3) {
           endGame('win', newGameResults);
         } else {
           setGameState('roundResult');
-        }
+        } //se il giocatore ha vinto 3 carte, termina il gioco
       } else {
         setMessage(`Wrong! "${currentCard.name}" doesn't go in position ${position + 1}. Correct position was ${result.correctPosition + 1}.`);
         
+        //se la risposta è sbagliata, creo un nuovo oggetto risultato e lo aggiungo ai risultati del gioco
         const newResult = {
           round: round,
           cardId: currentCard.id,
@@ -184,7 +189,8 @@ function GamePage({ user }) {
         } else {
           setGameState('roundResult');
         }
-      }    } catch (error) {
+      }    
+    } catch (error) {
       setMessage('Error making guess: ' + error);
       console.error('Error in makeGuess:', error);
     }
@@ -192,7 +198,7 @@ function GamePage({ user }) {
 
   const endGame = async (result, results) => {
     try {
-      stopTimer();
+      stopTimer(); //fermo il timer prima di terminare il gioco
       setGameState(result);
       
       const gameEndTime = dayjs();
@@ -202,7 +208,7 @@ function GamePage({ user }) {
         gameStartTime.toISOString(),
         gameEndTime.toISOString(),
         result
-      );
+      ); //salvo il gioco nel database
       
       const gameId = gameResponse.gameId;      
 
@@ -218,7 +224,7 @@ function GamePage({ user }) {
           false, 
           roundResult.won
         );
-      }
+      } //aggiungo le carte iniziali e i risultati dei round al gioco salvato
       
       const finalResult = {
         result: result,
@@ -241,11 +247,11 @@ function GamePage({ user }) {
   };
 
   const proceedToNextRound = () => {
-    setRound(round + 1);
+    setRound(round + 1); //incremento il numero del round
     setLastRoundResult(null);
-    setCurrentCard(null);
+    setCurrentCard(null); //resetto la carta corrente e i risultati dell'ultimo round
     setGameState('playing');
-    nextRound();
+    nextRound(); //richiamo la funzione per ottenere la prossima carta
   };
   const restartGame = () => {
     stopTimer();
@@ -263,7 +269,7 @@ function GamePage({ user }) {
     setShowFinalResult(false);
     setFinalGameResult(null);
     setTimeLeft(30);
-    startGame();
+    startGame(); //tutto il processo di avvio del gioco
   };
 
   if (!user) {
