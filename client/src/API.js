@@ -20,8 +20,8 @@ const logIn = async (credentials) => {
   }
 };
 
-// Get user info
-const getUserInfo = async () => {
+//User info
+  const getUserInfo = async () => {
   const response = await fetch(SERVER_URL + '/api/sessions/current', {
     credentials: 'include',
   });
@@ -43,7 +43,7 @@ const logOut = async() => {
     return null;
 }
 
-// Demo game - get initial cards
+// Demo game - Prendo le prime tre carte per iniziare il gioco
 const startDemoGame = async () => {
   const response = await fetch(SERVER_URL + '/api/games/demo');
   if(response.ok) {
@@ -55,8 +55,9 @@ const startDemoGame = async () => {
   }
 };
 
-// Demo game - get round card
-const getDemoRoundCard = async (excludeIds) => {
+// Demo game - Nuovo round, prendo una carta da aggiungere al mazzo
+// Usata sia per il gioco demo che per quello autenticato
+const getRoundCard = async (excludeIds) => {
   const queryString = excludeIds.join(',');
   const response = await fetch(SERVER_URL + `/api/games/demo/round?initialCards=${queryString}`);
   if(response.ok) {
@@ -68,8 +69,9 @@ const getDemoRoundCard = async (excludeIds) => {
   }
 };
 
-// Demo game - make guess
-const makeDemoGuess = async (cardId, playerCardIds, insertPosition) => {
+// Demo game - Utente fa una guess
+// Usata sia per il gioco demo che per quello autenticato
+const makeGuess = async (cardId, playerCardIds, insertPosition) => {
   const response = await fetch(SERVER_URL + '/api/game/demo/guess', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -90,7 +92,7 @@ const makeDemoGuess = async (cardId, playerCardIds, insertPosition) => {
   }
 };
 
-// Authenticated game - start new game
+// Authenticated game - Inizio un nuovo gioco
 const startNewGame = async () => {
   const response = await fetch(SERVER_URL + '/api/games/new', {
     method: 'POST',
@@ -105,43 +107,7 @@ const startNewGame = async () => {
   }
 };
 
-// Authenticated game - get round card
-const getRoundCard = async (gameId, excludeIds) => {
-  const queryString = excludeIds.join(',');
-  const response = await fetch(SERVER_URL + `/api/games/${gameId}/round?initialCards=${queryString}`);
-  if(response.ok) {
-    const roundCard = await response.json();
-    return roundCard;
-  }
-  else {
-    throw new Error("Unable to get round card");
-  }
-};
-
-// Authenticated game - make guess
-const makeGuess = async (gameId, cardId, playerCardIds, insertPosition) => {
-  const response = await fetch(SERVER_URL + `/api/games/${gameId}/guess`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    credentials: 'include',
-    body: JSON.stringify({
-      cardId: cardId,
-      playerCardIds: playerCardIds,
-      insertPosition: insertPosition
-    })
-  });
-  
-  if(response.ok) {
-    const result = await response.json();
-    return result;
-  }
-  else {
-    const error = await response.json();
-    throw error;
-  }
-};
-
-// End game
+// Fine del gioco: salvo il risultato nel database
 const endGame = async (gameId, startTime, endTime, result) => {
   const response = await fetch(SERVER_URL + `/api/games/${gameId}/end`, {
     method: 'POST',
@@ -164,7 +130,7 @@ const endGame = async (gameId, startTime, endTime, result) => {
   }
 };
 
-// Get user games
+// Prendo i giochi dell'utente autenticato
 const getUserGames = async () => {
   const response = await fetch(SERVER_URL + '/api/games', {
     credentials: 'include'
@@ -178,7 +144,7 @@ const getUserGames = async () => {
   }
 };
 
-// Get game cards
+// Prendo le carte di un gioco specifico
 const getGameCards = async (gameId) => {
   const response = await fetch(SERVER_URL + `/api/games/${gameId}/cards`, {
     credentials: 'include'
@@ -192,19 +158,17 @@ const getGameCards = async (gameId) => {
   }
 };
 
-// Add game card
+// Aggiungo una carta a un gioco specifico
 const addGameCard = async (gameId, cardId, round, initial, won) => {
   const body = {
     cardId: cardId,
     initial: initial
   };
-  
-  // Only include 'round' if it's not null (for non-initial cards)
+
   if (round !== null && round !== undefined) {
     body.round = round;
   }
-  
-  // Only include 'won' if it's defined
+
   if (won !== undefined) {
     body.won = won;
   }
@@ -231,8 +195,6 @@ const API = {
   getUserInfo, 
   logOut, 
   startDemoGame, 
-  getDemoRoundCard, 
-  makeDemoGuess,
   startNewGame, 
   getRoundCard, 
   makeGuess,

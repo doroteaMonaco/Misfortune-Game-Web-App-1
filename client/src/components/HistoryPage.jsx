@@ -24,11 +24,9 @@ function HistoryPage({ user }) {
     try {
       setLoading(true);
       setError('');
-      
-      // Get all user games
+    
       const userGames = await API.getUserGames();
       
-      // Process the games to ensure date fields are properly formatted      // Check the original data format
       if (userGames.length > 0) {
         console.log('Game date fields format check:', {
           game: userGames[0],
@@ -40,10 +38,8 @@ function HistoryPage({ user }) {
       }
       
       const processedGames = userGames.map(game => {
-        // Convert date strings to dayjs objects if they're not already
         return {
           ...game,
-          // Use ISO string for consistent formatting
           startTime: game.startTime ? game.startTime : game.start_time,
           endTime: game.endTime ? game.endTime : game.end_time
         };
@@ -51,7 +47,6 @@ function HistoryPage({ user }) {
       
       setGames(processedGames);
       
-      // Get cards for each game
       const gameCardsData = {};
       for (const game of processedGames) {
         try {
@@ -72,27 +67,18 @@ function HistoryPage({ user }) {
   };  const formatDate = (dateInput) => {
     if (!dateInput) return "N/A";
     
-    // Log the input type for debugging
-    console.log('Date input type:', typeof dateInput, dateInput);
-    
-    // Handle different possible formats
     let date;
     
     if (typeof dateInput === 'string') {
-      // Parse ISO string or other date string format
       date = dayjs(dateInput);
     } else if (typeof dateInput === 'object') {
       if (dateInput._isAMomentObject || dateInput._isValid) {
-        // It's already a dayjs/moment object
         date = dateInput;
       } else if (dateInput instanceof Date) {
-        // It's a JavaScript Date object
         date = dayjs(dateInput);
       } else if (dateInput.format) {
-        // It might be a dayjs-like object with a format method
         return dateInput.format('DD/MM/YYYY HH:mm:ss');
       } else {
-        // Try to convert from JSON representation
         try {
           date = dayjs(dateInput);
         } catch (e) {
@@ -101,28 +87,23 @@ function HistoryPage({ user }) {
         }
       }
     } else {
-      // For other types, try direct conversion
       date = dayjs(dateInput);
     }
     
-    // Check if the date is valid
     if (!date.isValid()) {
       console.error("Invalid date:", dateInput);
       return "Invalid Date";
     }
     
-    // Format the date
     return date.format('DD/MM/YYYY HH:mm:ss');
   };
 
   const getGameDuration = (startTime, endTime) => {
     if (!startTime || !endTime) return "N/A";
     
-    // Create dayjs objects from the dates
     const start = dayjs(startTime);
     const end = dayjs(endTime);
     
-    // Check if both dates are valid
     if (!start.isValid() || !end.isValid()) {
       console.error("Invalid date format for duration calculation:", { start: startTime, end: endTime });
       return "Invalid Duration";
@@ -310,7 +291,7 @@ function HistoryPage({ user }) {
                         </div>
                       </Col>
                       
-                      {/* Won Cards */}
+                      
                       <Col md={4}>
                         <div className="border border-success rounded p-3">
                           <h6 className="d-flex align-items-center text-success">
@@ -329,7 +310,7 @@ function HistoryPage({ user }) {
                         </div>
                       </Col>
                       
-                      {/* Lost Cards */}
+                     
                       <Col md={4}>
                         <div className="border border-danger rounded p-3">
                           <h6 className="d-flex align-items-center text-danger">

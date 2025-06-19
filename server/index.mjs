@@ -27,7 +27,6 @@ const app = express();
 const port = 3001;
 const SERVER_URL = `http://localhost:${port}`;
 
-// Helper function to create full image URL
 const getFullImageUrl = (imagePath) => {
   if (!imagePath) return null;
   return `${SERVER_URL}${imagePath}`;
@@ -36,20 +35,17 @@ const getFullImageUrl = (imagePath) => {
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Serve static files (images) from public directory
 app.use('/public', express.static('public'));
-// Serve images directly from /images path
 app.use('/images', express.static('public/images'));
 
 const corsOptions = {
   origin: 'http://localhost:5173',
-  optionsSuccessStatus: 200, // Per IE11 e vecchi browser
+  optionsSuccessStatus: 200, 
   credentials: true
 };
 
 app.use(cors(corsOptions));
 
-// Uso LocalStrategy per l'autenticazione con username e password e verifica se l'utente esiste
 passport.use(new LocalStrategy(async function verify(username, password, cb) {
   const user = await getUser(username, password);
   if (!user)
@@ -60,7 +56,6 @@ passport.use(new LocalStrategy(async function verify(username, password, cb) {
 
 // Serialize viene usato per salvare l'utente nella sessione
 passport.serializeUser(function (user, cb) {
-  // Store only safe user data in session - NEVER passwords or hashes
   const safeUser = {
     id: user.id,
     username: user.username
@@ -70,7 +65,6 @@ passport.serializeUser(function (user, cb) {
 
 // Deserialize viene usato per recuperare l'utente dalla sessione
 passport.deserializeUser(function (user, cb) {
-  // User is already safe from serialization
   return cb(null, user);
 });
 
@@ -90,13 +84,11 @@ app.use(session({
 }));
 app.use(passport.authenticate('session'));
 
-//TODO verificare se è necessario inserire una funziona per il check dell'ownership del game
 
 ///*************LOGIN***************//
 
 // LOGIN
 app.post('/api/sessions', passport.authenticate('local'), function(req, res) {
-  // Return only safe user data without password/salt
   const safeUser = {
     id: req.user.id,
     username: req.user.username
@@ -107,7 +99,6 @@ app.post('/api/sessions', passport.authenticate('local'), function(req, res) {
 // Prende la sessione corrente
 app.get('/api/sessions/current', (req, res) => {
   if (req.isAuthenticated()) {
-    // Return only safe user data without password/salt
     const safeUser = {
       id: req.user.id,
       username: req.user.username
@@ -131,7 +122,6 @@ app.delete('/api/sessions/current', (req, res) => {
 app.get('/api/games/demo', async (req, res) => {
   try {
     const initialCards = await getRandomCards(3);
-    // Include full image URLs for initial cards
     const cardsWithFullUrls = initialCards.map(card => ({
       ...card,
       image: getFullImageUrl(card.image)
@@ -144,7 +134,6 @@ app.get('/api/games/demo', async (req, res) => {
 
 app.get('/api/games/demo/round', async (req, res) => {
   try {
-    // Se initialCards è passato come stringa separata da virgole: "1,2,3"
     const excludeIds = req.query.initialCards 
       ? req.query.initialCards.split(',').map(id => parseInt(id)) 
       : [];
@@ -196,7 +185,7 @@ app.post('/api/game/demo/guess', [
       }      result.card = {
         name: card.name,
         image: getFullImageUrl(card.image),
-        misfortune: card.misfortune  // Include index when card is won to allow proper insertion
+        misfortune: card.misfortune  
       };
     }
     
@@ -206,7 +195,6 @@ app.post('/api/game/demo/guess', [
   }
 });
 
-//TODO: Gestione fine
 
 ///*************GAME DI UTENTI***************///
 
@@ -214,7 +202,6 @@ app.post('/api/game/demo/guess', [
 app.post('/api/games/new', isLoggedIn, async (req, res) => {
   try {
     const initialCards = await getRandomCards(3);
-    // Include full image URLs for initial cards
     const cardsWithFullUrls = initialCards.map(card => ({
       ...card,
       image: getFullImageUrl(card.image)
@@ -229,7 +216,6 @@ app.post('/api/games/new', isLoggedIn, async (req, res) => {
 
 app.get('/api/games/:gameId/round', isLoggedIn, async (req, res) => {
   try {
-    // Se initialCards è passato come stringa separata da virgole: "1,2,3"
     const excludeIds = req.query.initialCards 
       ? req.query.initialCards.split(',').map(id => parseInt(id)) 
       : [];
@@ -280,7 +266,7 @@ app.post('/api/games/:gameId/guess', isLoggedIn, [
         id: card.id,
         name: card.name,
         image: getFullImageUrl(card.image),
-        misfortune: card.misfortune  // Include index when card is won to allow proper insertion
+        misfortune: card.misfortune  
       };
     }
     
@@ -319,7 +305,6 @@ app.post('/api/games/:gameId/end', isLoggedIn, [
 
 ///*************GAME DI UTENTI***************///
 
-//TODO: nel cliente associamo le carte ai round
 // Recuperare sessioni di gioco di un utente
 app.get('/api/games', isLoggedIn, async (req, res) => {
   try {
@@ -331,12 +316,10 @@ app.get('/api/games', isLoggedIn, async (req, res) => {
   }
 });
 
-//TODO: numero totale di carte alla fine della partita
 //Recupero le carte di una partita
 app.get('/api/games/:gameId/cards', isLoggedIn, async (req, res) => {
   try {
     const gameCards = await getCardsOfGame(req.params.gameId);
-    // Add full image URLs to cards
     const cardsWithFullUrls = gameCards.map(item => ({
       ...item,
       card: {
@@ -364,7 +347,7 @@ app.post('/api/games/:gameId/cards', isLoggedIn, [
       null,
       req.params.gameId,
       req.body.cardId,
-      req.body.round !== undefined ? req.body.round : null, // Explicitly convert undefined to null
+      req.body.round !== undefined ? req.body.round : null, 
       req.body.initial ? 1 : 0,
       req.body.won !== undefined ? (req.body.won ? 1 : 0) : null
     );

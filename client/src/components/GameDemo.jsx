@@ -18,7 +18,6 @@ function GameDemo() {
   }, []);
 
   useEffect(() => {
-    //Timer di 30 secondi per ogni round
     if (gameState === 'playing' && currentCard && timeLeft > 0) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
@@ -68,7 +67,7 @@ function GameDemo() {
   };
   const nextRound = async (excludeIds) => {
     try {
-      const card = await API.getDemoRoundCard(excludeIds);
+      const card = await API.getRoundCard(excludeIds);
       setCurrentCard(card);
       startTimer(); 
     } catch (error) {
@@ -76,9 +75,9 @@ function GameDemo() {
     }
   };  const makeGuess = async (position) => {
     try {
-      stopTimer(); // Ferma il timer quando il giocatore fa una scelta
+      stopTimer(); 
       
-      const result = await API.makeDemoGuess(
+      const result = await API.makeGuess(
         currentCard.id,
         playerCards.map(c => c.id),
         position
@@ -194,7 +193,8 @@ function GameDemo() {
             </Card>
           </Col>
         </Row>
-      )}      {gameState === 'playing' && (
+      )}      
+      {gameState === 'playing' && (
         <Row>
           <Col>
             <div className="d-flex flex-wrap gap-2 align-items-center">
@@ -254,8 +254,8 @@ function GameDemo() {
         </Row>
       )}
 
-      {/* Result Modal */}
-      <Modal show={showResult} onHide={() => setShowResult(false)} centered>        <Modal.Header closeButton>
+      <Modal show={showResult} onHide={() => setShowResult(false)} centered>        
+        <Modal.Header closeButton>
           <Modal.Title>
             {gameResult?.type === 'win' ? (
               <span className="text-success"> Victory </span>
@@ -283,7 +283,6 @@ function GameDemo() {
             )}
           </div>
 
-          {/* Your Cards Collection */}
           <div className="text-center">
             <h6>Your Card Collection ({playerCards.length} cards):</h6>            
             <div className="d-flex flex-wrap justify-content-center gap-2 mt-3">

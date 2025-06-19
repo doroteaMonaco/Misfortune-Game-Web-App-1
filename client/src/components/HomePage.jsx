@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 function HomePage(props) {
   return (
     <Container className="mt-4">
-      {/* Hero Section */}
       <Row className="text-center mb-5">        
         <Col>
           <Card className="border-0 bg-light shadow-sm">
@@ -25,11 +24,12 @@ function HomePage(props) {
             </Card.Body>
           </Card>
         </Col>
-      </Row>      {/* Action Buttons for Logged In Users */}
+      </Row>     
       {props.loggedIn && (
         <Row className="text-center mb-5">
           <Col>
-            <Card className="border-success">              <Card.Header className="bg-success text-white">
+            <Card className="border-success">             
+              <Card.Header className="bg-success text-white">
                 <h4 className="mb-0">
                   <i className="bi bi-person-check me-2"></i>
                   Welcome back, {props.user?.username || 'Player'}!
@@ -52,7 +52,7 @@ function HomePage(props) {
         </Row>
       )}
 
-      {/* Game Rules Section */}
+      
       <Row className="mb-4">
         <Col>
           <Card className="border-success">

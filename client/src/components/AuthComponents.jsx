@@ -5,8 +5,7 @@ import { useNavigate } from 'react-router-dom';
 function LoginForm(props) {
     const navigate = useNavigate();
     const [state, formAction, isPending] = useActionState(loginFunction, {username: '', password: ''});
-
-    // Naviga dopo login di successo
+    
     useEffect(() => {
         if (state.success) {
             navigate('/');

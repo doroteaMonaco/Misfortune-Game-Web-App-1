@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 function GamePage({ user }) {
   const navigate = useNavigate();
-    // Game state
+
   const [gameState, setGameState] = useState('loading'); // 'loading', 'playing', 'roundResult', 'won', 'lost'
   const [initialCards, setInitialCards] = useState([]);
   const [currentCard, setCurrentCard] = useState(null);
@@ -15,17 +15,15 @@ function GamePage({ user }) {
   const [message, setMessage] = useState('');
   const [gameStartTime, setGameStartTime] = useState(null);
   const [lastRoundResult, setLastRoundResult] = useState(null);
-  
-  // Game progress tracking
   const [cardsWon, setCardsWon] = useState(0);
   const [cardsLost, setCardsLost] = useState(0);
-  const [gameResults, setGameResults] = useState([]); // Array per tracciare risultati di ogni round
+  const [gameResults, setGameResults] = useState([]); 
   
   // Timer
   const [timeLeft, setTimeLeft] = useState(30);
   const [timerId, setTimerId] = useState(null);
   
-  // Modals
+  // Stato per la fine del gioco
   const [showResult, setShowResult] = useState(false);
   const [showFinalResult, setShowFinalResult] = useState(false);
   const [finalGameResult, setFinalGameResult] = useState(null);
@@ -39,7 +37,6 @@ function GamePage({ user }) {
   }, [user, navigate]);
 
   useEffect(() => {
-    // Timer di 30 secondi per ogni round
     if (gameState === 'playing' && currentCard && timeLeft > 0) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
@@ -47,20 +44,17 @@ function GamePage({ user }) {
       setTimerId(timer);
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && gameState === 'playing') {
-      // Time's up! - Consider round lost
       handleTimeUp();
     }  }, [timeLeft, gameState, currentCard]);
 
   const handleTimeUp = () => {
-    // Guard against null currentCard
     if (!currentCard) {
       console.error('handleTimeUp called but currentCard is null');
       return;
     }
     
     setMessage(`Time's up! You lost the round with "${currentCard.name}"!`);
-    
-    // Add to game results as lost
+  
     const newResult = {
       round: round,
       cardId: currentCard.id,
@@ -75,11 +69,9 @@ function GamePage({ user }) {
     setCardsLost(newCardsLost);
     setLastRoundResult(newResult);
     
-    // Check if game should end
     if (newCardsLost >= 3) {
       endGame('lose', newGameResults);
     } else {
-      // Show round result screen
       setGameState('roundResult');
     }
   };
@@ -99,7 +91,6 @@ function GamePage({ user }) {
     try {
       setGameState('loading');
       setGameStartTime(dayjs());      const cards = await API.startNewGame();
-      // Sort initial cards by misfortune index (these legitimately need the index)
       const sortedCards = cards.sort((a, b) => a.misfortune - b.misfortune);
       setInitialCards(sortedCards);
       setPlayerCards([...sortedCards]);
@@ -114,14 +105,12 @@ function GamePage({ user }) {
   };
   const nextRound = async () => {
     try {
-      // Get all card IDs that have been used (initial + won + current round cards)
       const usedCardIds = [
         ...initialCards.map(c => c.id),
         ...gameResults.filter(r => r.won).map(r => r.cardId)
       ];
       
-      // For getting round card, we don't need gameId, just use the demo API approach
-      const card = await API.getDemoRoundCard(usedCardIds);
+      const card = await API.getRoundCard(usedCardIds);
       setCurrentCard(card);
       startTimer();
     } catch (error) {
@@ -132,20 +121,18 @@ function GamePage({ user }) {
     try {
       stopTimer();
       
-      // For making guess, we can use the demo API approach since we're not storing during play
-      const result = await API.makeDemoGuess(
+      const result = await API.makeGuess(
         currentCard.id,
         playerCards.map(c => c.id),
         position
       );
       
       if (result.correct) {
-        // Won the round!
         const newCard = {
           id: currentCard.id,
           name: result.card.name,
           image: result.card.image,
-          misfortune: result.card.misfortune  // Available only after winning
+          misfortune: result.card.misfortune  
         };
         
         const newPlayerCards = [...playerCards];
@@ -154,13 +141,13 @@ function GamePage({ user }) {
         
         setMessage(`Correct! You won "${result.card.name}"!`);
         
-        // Add to game results as won
         const newResult = {
           round: round,
           cardId: currentCard.id,
           cardName: result.card.name,
           won: true,
-          position: position,          cardDetails: newCard
+          position: position,          
+          cardDetails: newCard
         };
         
         const newGameResults = [...gameResults, newResult];
@@ -169,24 +156,21 @@ function GamePage({ user }) {
         setCardsWon(newCardsWon);
         setLastRoundResult(newResult);
         
-        // Check if game should end (won 3 cards)
         if (newCardsWon >= 3) {
           endGame('win', newGameResults);
         } else {
-          // Show round result screen
           setGameState('roundResult');
         }
       } else {
-        // Lost the round
         setMessage(`Wrong! "${currentCard.name}" doesn't go in position ${position + 1}. Correct position was ${result.correctPosition + 1}.`);
         
-        // Add to game results as lost
         const newResult = {
           round: round,
           cardId: currentCard.id,
           cardName: currentCard.name,
           won: false,
-          guessedPosition: position,          correctPosition: result.correctPosition
+          guessedPosition: position,          
+          correctPosition: result.correctPosition
         };
         
         const newGameResults = [...gameResults, newResult];
@@ -195,11 +179,9 @@ function GamePage({ user }) {
         setCardsLost(newCardsLost);
         setLastRoundResult(newResult);
         
-        // Check if game should end (lost 3 cards)
         if (newCardsLost >= 3) {
           endGame('lose', newGameResults);
         } else {
-          // Show round result screen
           setGameState('roundResult');
         }
       }    } catch (error) {
@@ -214,8 +196,7 @@ function GamePage({ user }) {
       setGameState(result);
       
       const gameEndTime = dayjs();
-      
-      // Save game to database - use any gameId since the server ignores it
+
       const gameResponse = await API.endGame(
         'new',
         gameStartTime.toISOString(),
@@ -223,13 +204,12 @@ function GamePage({ user }) {
         result
       );
       
-      const gameId = gameResponse.gameId;      // Save all game cards to database
-      // First save initial cards
+      const gameId = gameResponse.gameId;      
+
       for (const card of initialCards) {
         await API.addGameCard(gameId, card.id, null, true);
       }
       
-      // Then save round results
       for (const roundResult of results) {
         await API.addGameCard(
           gameId, 
@@ -240,7 +220,6 @@ function GamePage({ user }) {
         );
       }
       
-      // Prepare final result data
       const finalResult = {
         result: result,
         totalRounds: results.length,
@@ -310,7 +289,7 @@ function GamePage({ user }) {
         </Row>
       </Container>
     );
-  }  // Round Result Screen - Full Screen Modal-like
+  } 
   if (gameState === 'roundResult' && lastRoundResult) {
     return (
       <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center overflow-auto" 
@@ -435,7 +414,6 @@ function GamePage({ user }) {
 
   return (
     <Container className="mt-4">
-      {/* Game Header */}
       <Row className="mb-4">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
@@ -453,7 +431,7 @@ function GamePage({ user }) {
             </div>
           </div>
         </Col>
-      </Row>      {/* Game Progress - Counter Style */}
+      </Row>     
       <Row className="mb-4">
         <Col>
           <Card>
@@ -483,7 +461,6 @@ function GamePage({ user }) {
         </Col>
       </Row>
 
-      {/* Messages */}
       {message && (
         <Row className="mb-3">
           <Col>
@@ -496,7 +473,7 @@ function GamePage({ user }) {
             </Alert>
           </Col>
         </Row>
-      )}      {/* Current Card */}
+      )}     
       {gameState === 'playing' && currentCard && (
         <Row className="mb-4">
           <Col>
@@ -522,7 +499,7 @@ function GamePage({ user }) {
             </Card>
           </Col>
         </Row>
-      )}      {/* Player Cards */}
+      )}      
       {gameState === 'playing' && (
         <Row>
           <Col>
@@ -585,7 +562,7 @@ function GamePage({ user }) {
         </Row>
       )}
 
-      {/* Final Result Modal */}
+   
       <Modal show={showFinalResult} onHide={() => setShowFinalResult(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -670,13 +647,9 @@ function GamePage({ user }) {
           <Button variant="primary" onClick={restartGame}>
             Play Again
           </Button>
-          <Link to="/history" className="btn btn-info">
-            View Game History
-          </Link>
         </Modal.Footer>
       </Modal>
 
-      {/* Game Rules */}
       <Row className="mt-4">
         <Col>
           <Card>

@@ -3,8 +3,6 @@ import dayjs from 'dayjs';
 function User(id, username) {
     this.id = id;
     this.username = username;
-    // SECURITY: password, password_hash, and salt are NEVER stored in this object
-    // They should only be used for authentication, never exposed in API responses
 }
 
 function Card(id, name, image, misfortune, initial = false, won = false) {

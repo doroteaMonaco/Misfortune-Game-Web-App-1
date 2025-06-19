@@ -19,7 +19,6 @@ export const getUser = (username, password) => {
           if (err) reject(err);          else if (!crypto.timingSafeEqual(Buffer.from(row.password_hash, 'hex'), hashedPwd))
             resolve(false);
           else
-            // Return only safe user data - NEVER include password_hash or salt
             resolve(new User(row.id, row.username));
         });
       }
@@ -165,7 +164,6 @@ export const updateGame = (game) => {
 
 export const checkIndex = (cardId, playerCardIds, insertPosition) => {
   return new Promise((resolve, reject) => {
-    // Get the badluck_index of the card to place
     const getCardSql = 'SELECT misfortune_index FROM CARD WHERE id = ?';
     
     db.get(getCardSql, [cardId], (err, cardRow) => {
@@ -178,17 +176,15 @@ export const checkIndex = (cardId, playerCardIds, insertPosition) => {
         return resolve({ correct: true }); 
       }
       
-      // Get the badluck_index of player's cards
       const placeholders = playerCardIds.map(() => '?').join(',');
       const getPlayerCardsSql = `SELECT id, misfortune_index FROM CARD WHERE id IN (${placeholders}) ORDER BY misfortune_index`;
       
       db.all(getPlayerCardsSql, playerCardIds, (err, playerCards) => {
         if (err) return reject(err);
-          // Check if the placement is correct
         let correct = false;
         let correctPosition = 0;
         
-        // Find the correct position for this card
+        
         for (let i = 0; i < playerCards.length; i++) {
           if (cardIndex < playerCards[i].misfortune_index) {
             correctPosition = i;
@@ -196,10 +192,10 @@ export const checkIndex = (cardId, playerCardIds, insertPosition) => {
           }
           correctPosition = i + 1;
         }
-          // Check if the provided position matches the correct position
+          
         correct = (insertPosition === correctPosition);
         
-        // SECURITY: Only return if correct, don't expose internal indexes
+        
         if (correct) {
           resolve({ correct: true });
         } else {

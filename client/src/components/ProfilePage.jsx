@@ -7,7 +7,8 @@ function ProfilePage({ user }) {
       <Row className="justify-content-center">
         <Col md={8}>
           <Card className="border-success shadow">
-            <Card.Header className="bg-success text-white text-center">              <h3 className="mb-0">
+            <Card.Header className="bg-success text-white text-center">              
+              <h3 className="mb-0">
                 <i className="bi bi-person-circle me-2"></i>
                 User Profile
               </h3>

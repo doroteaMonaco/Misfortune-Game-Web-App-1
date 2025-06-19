@@ -38,7 +38,7 @@ function App() {
       setUser(user);
     } catch(err) {
       setMessage({msg: err, type: 'danger'});
-      throw err; // Re-throw so AuthComponents can handle it
+      throw err; 
     }
   };
 
@@ -48,7 +48,8 @@ function App() {
     setMessage('');
     setUser('');
   };
-  return (    <Routes>     
+  return (    
+    <Routes>     
        <Route element={ <DefaultLayout loggedIn={loggedIn} handleLogout={handleLogout} message={message} setMessage={setMessage} user={user}/> } >
         <Route path="/" element={ <HomePage loggedIn={loggedIn} user={user} /> } />
         <Route path="/game" element={ <GamePage loggedIn={loggedIn} user={user} /> } />
