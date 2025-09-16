@@ -1,7 +1,7 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/uNTgnFHD)
-# Exam #N: "Gioco della Sfortuna"
-## Student: s349653 MONACO DOROTEA 
 
+"Gioco della Sfortuna"
+
+![alt text](misfortune.png)
 ## React Client Application Routes
 
 ### **Public Routes**
